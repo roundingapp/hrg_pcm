@@ -1,38 +1,20 @@
 import {initializeApp} from 'firebase/app';
-import {initializeAuth,browserSessionPersistence,signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,sendPasswordResetEmail,sendEmailVerification,signOut} from 'firebase/auth';
-import {PublicClientApplication,InteractionRequiredAuthError} from '@azure/msal-browser';
+import {initializeAuth,browserSessionPersistence,browserPopupRedirectResolver,signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,sendPasswordResetEmail,sendEmailVerification,signOut,OAuthProvider,signInWithPopup} from 'firebase/auth';
 import {config} from '../config.js';
-
-// Identity only: never initialize Firestore, Storage, or Analytics here.
 export async function createIdentity() {
-  const auth=initializeAuth(initializeApp(config.firebase),{persistence:browserSessionPersistence});
+  const app=initializeApp(config.firebase);
+  const auth=initializeAuth(app,{persistence:browserSessionPersistence,popupRedirectResolver:browserPopupRedirectResolver});
   await auth.authStateReady();
-  const microsoft=new PublicClientApplication({auth:{clientId:config.clientId,
-    authority:'https://login.microsoftonline.com/'+config.tenantId,redirectUri:config.redirectUri},
-    cache:{cacheLocation:'sessionStorage'},system:{loggerOptions:{piiLoggingEnabled:false}}});
-  await microsoft.initialize();
-  const result=await microsoft.handleRedirectPromise();
-  if(result?.account)microsoft.setActiveAccount(result.account);
-  const scopes=['api://'+config.clientId+'/access_as_user'];
-  let provider=sessionStorage.getItem('pcm.identity')||(auth.currentUser?'firebase':'microsoft');
-  const user=()=>provider==='firebase'?auth.currentUser:(microsoft.getActiveAccount()||microsoft.getAllAccounts()[0]||null);
   return {
-    user,
+    app,auth,user:()=>auth.currentUser,
     async email(email,password,create=false){
-      provider='firebase';sessionStorage.setItem('pcm.identity',provider);
       const credential=await (create?createUserWithEmailAndPassword:signInWithEmailAndPassword)(auth,email.trim(),password);
       if(create)await sendEmailVerification(credential.user);
       return credential.user;
     },
-    async microsoft(){provider='microsoft';sessionStorage.setItem('pcm.identity',provider);await microsoft.loginRedirect({scopes,prompt:'select_account'});},
+    async microsoft(){const provider=new OAuthProvider('microsoft.com');provider.setCustomParameters({tenant:config.tenantId,prompt:'select_account'});return signInWithPopup(auth,provider);},
     async reset(email){await sendPasswordResetEmail(auth,email.trim());},
-    async token(){
-      if(provider==='firebase'){if(!auth.currentUser)throw Error('Sign in to open PCM.');return auth.currentUser.getIdToken();}
-      try{return (await microsoft.acquireTokenSilent({scopes,account:user()})).accessToken;}
-      catch(e){if(e instanceof InteractionRequiredAuthError)throw Error('Your sign-in expired. Sign in again.');throw e;}
-    },
-    async logout(){sessionStorage.removeItem('pcm.identity');if(provider==='firebase')await signOut(auth);
-      else await microsoft.logoutRedirect({account:user(),postLogoutRedirectUri:config.redirectUri});}
+    async logout(){await signOut(auth);}
   };
 }

@@ -16,7 +16,7 @@ class LoginBrowser(unittest.TestCase):
         thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
         try:
             with sync_playwright() as p:
-                browser=p.chromium.launch(headless=True)
+                browser=p.chromium.launch(headless=True,channel="chrome")
                 page=browser.new_page(viewport={'width':390,'height':844})
                 calls=[]
                 page.on('request',lambda r:calls.append(r.url))

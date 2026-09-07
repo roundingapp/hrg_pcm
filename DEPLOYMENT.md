@@ -1,78 +1,75 @@
-# PCM deployment status
+# PCM deployment
 
-The main branch is a setup landing page. The shared-account implementation is
-under construction and must not be presented as a working employee workspace.
+## Architecture
 
-## Account model
+GitHub Pages serves application code and branding. The existing Firebase project
+provides staff identity and Firestore stores PCM. No Azure subscription or API
+server is used. Microsoft sign-in is an OAuth identity option; it requires no
+Azure hosting subscription. Its secret is stored in Firebase provider settings,
+never browser code or GitHub.
 
-- Reuse the pay tracker's existing Firebase email/password accounts and user IDs.
-- Allow new personal-email accounts in that same identity project; verify new
-  email addresses before granting access by email.
-- Offer Microsoft sign-in using the PCM app's own `access_as_user` API scope.
-- The API verifies signatures, issuer, audience, expiry, tenant and scope.
-  It separately checks a PCM allowlist. An account by itself grants no patient access.
-- Firebase is used for identity only. No Firestore, Firebase Storage, or Analytics
-  client is initialized. Clinical records are held in Microsoft SharePoint.
+The user explicitly selected Firestore, confirmed a Google BAA, and approved the
+PCM security rules and owner/publisher permissions. This supersedes the earlier
+Microsoft storage plan. No clinical dataset was uploaded to SharePoint. The
+temporary Graph setup client was removed and its absence verified.
 
-## Shared implementation
+## Data and permissions
 
-`shared/pcm.js` is a build-time copy of the HRG console's PCM module. Run
-`node build.mjs --sync-console` from the sibling workspace to update it. The
-public interface hides financial amounts, and the API strips them from responses.
+PCM occupies only `pcm_*` collections in the existing default Firestore database.
+All prior payroll rules are preserved verbatim. The approved rules are in
+`firestore/pcm.rules`, a fragment added inside the existing documents match.
+Never replace the pay project's rules with this fragment alone.
 
-`api/` is a Node Azure Functions application. It uses only the dedicated PCM
-SharePoint site. Both the owner console adapter and API use the same five lists:
-Publication, Sources, Members, Workflow and Activities. SharePoint ETags reject
-stale edits; activity request IDs prevent duplicate submissions. The immutable
-publication is complete before its active pointer changes. Saved members survive
-removal from the current candidate algorithm.
+- Access is pinned to Firebase UIDs in `pcm_access`; there is no email-domain or
+  self-registration grant. The initial identities are the verified owner and a
+  dedicated publisher. Staff permissions are added only when approved.
+- Readers can read PCM; editors can save validated workflow and append activity.
+- Workflow revisions reject stale saves. Each revision requires an immutable
+  before/after change record attributed to the authenticated UID.
+- Activity IDs are immutable and deduplicate retries. Rules validate patient,
+  month, actor, minutes, text limits, authenticated recorder and server time.
+- Source publication is restricted to the owner/publisher. Staff cannot alter
+  source evidence, grant themselves access, or modify previous activity.
+- Only the explicit PCM projection is uploaded. Revenue amounts are excluded.
+  The public repository contains no patient data or private infrastructure address.
 
-The console's cloud adapter and `publish_pcm.py` are prepared but inactive.
-The existing owner console continues to use its local SQLite workflow.
+## Console connection
 
-## Remaining activation steps
+The console's `pcm_firestore_store.py` uses a dedicated Firebase identity through
+Firestore REST, so its operations are subject to the same rules as the browser.
+Its credential and optional local Google routing setting live in a private JSON
+file referenced by `pcm_cloud_config` in the private console configuration.
+Install `requirements-pcm.txt` in the console environment.
 
-1. Choose an Azure subscription. None was available in the HRG tenant during setup.
-   A pay-as-you-go subscription with a monthly budget alert has been proposed;
-   no subscription or paid Azure resource has been created.
-2. Finish the PCM-only SharePoint resource grant for the synchronization app.
-   The app's application `Sites.Selected` consent and public certificate are saved.
-   Its selected-site resource grant is still absent. Do not add tenant-wide site
-   access to the production app. The earlier broad setup login was rejected and
-   never ran. A narrower one-site/one-app setup was also rejected by automatic
-   approval review. Explicit approval is now pending for temporary delegated
-   `Sites.FullControl.All`, the production app's PCM-only write grant, and removal
-   of the temporary setup client afterward. No temporary administrator flow ran.
-3. Deploy `api/` to Azure Functions with Node 22 or newer, HTTPS, the employee
-   site's exact CORS origin, and a US region. Keep request bodies, tokens and
-   patient records out of diagnostic logs.
-4. Supply private app settings: `PCM_TENANT_ID`, `PCM_SYNC_CLIENT_ID`,
-   `PCM_CERT_THUMBPRINT`, `PCM_PRIVATE_KEY`, `PCM_STORE_CONFIG`, and
-   `PCM_ACCESS_JSON`. Never commit actual credentials or allowlists.
-5. Initially permit only the owner's immutable identity. Add approved employee
-   Firebase UIDs, Microsoft object IDs, or verified personal emails separately.
-6. Verify the live site grant and API with synthetic records. Publish the first
-   allowlisted PCM dataset from the existing validated console generation.
-7. Check the local workflow DB again before switching stores. Preserve/import any
-   records created since setup started; the initial inventory contained none.
-8. Set `pcm_cloud_config` in the owner's private console config, restart the console,
-   and verify edits in both directions using synthetic records. Schedule the
-   publisher after validated nightly publication; never fork the report scrape.
-9. Pages HTTPS is verified: restarting provisioning issued the certificate,
-   enforcement is enabled, and an actual HTTPS request returned 200 successfully.
-10. Set `config.apiBase`, promote `workspace.html` to `index.html`, rebuild,
-    test real sign-in for the owner and one explicitly approved employee, then
-    merge the website release. Keep the setup landing page until these checks pass.
+`publish_pcm.py` publishes only the existing validated owner generation. It saves
+immutable source chunks before switching the active pointer. The refresh runner
+calls it after owner generation succeeds. A cloud publication failure retains
+the prior cloud dataset and reports a partial refresh. Unchanged generations do
+not publish again. Saved members survive removal from the candidate algorithm.
 
-## Verification
+The local SQLite inventory was empty immediately before activation and was backed
+up before the console switched to Firestore. Browser/owner round trips were
+verified using a synthetic patient; all synthetic records were then removed.
+The first real publication and owner console both contain 1,075 candidates.
 
-Install frontend and API dependencies separately with `npm ci` and
-`npm ci --prefix api`. Run `npm test` and `node build.mjs`.
+## Validation and release
 
-Synthetic tests cover existing pay identities, personal-email verification,
-Microsoft API tokens, denial without PCM permission, forged tokens, stale edits,
-activity retries, financial field removal, and retained members. The browser
-test intercepts authentication requests and sends no emails. Separate console
-tests cover its cloud adapter and existing workflow. Live employee access has
-not been verified yet. The implementation is backed up on `shared-pcm-accounts`
-with a draft pull request; main remains the setup landing page.
+`npm test` covers shared edits, simultaneous saves, stale revisions, duplicate
+activity, immutable change history, financial field removal, incomplete
+publications and retained members. The mobile login test uses synthetic inputs
+and installed Chrome; it sends no email. The console regression suite also passes.
+
+Live Firestore verification covered browser-to-owner and owner-to-browser edits,
+stale saves, duplicate minutes, denied self-grants, denied source overwrite,
+denied forged recorder IDs, denied unauthenticated reads, and denied payroll
+access for the PCM publisher. No real patient workflow was edited for testing.
+
+GitHub Pages publishes `main`. Rebuild after changing the interface, then check
+HTTPS, email sign-in, Microsoft sign-in, worklist loading and sign-out. Keep
+Firebase's authorized domains and the Microsoft Web callback configured for the
+site. The Microsoft OAuth credential expires after 180 days and must be rotated
+in Firebase before expiry.
+
+The existing Google project remains on its unbilled plan. Firestore's free quotas
+are shared with payroll; exceeding them can interrupt access. No paid plan was
+enabled during this deployment.
