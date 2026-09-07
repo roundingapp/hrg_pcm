@@ -39,7 +39,10 @@ The existing owner console continues to use its local SQLite workflow.
    The app's application `Sites.Selected` consent and public certificate are saved.
    Its selected-site resource grant is still absent. Do not add tenant-wide site
    access to the production app. The earlier broad setup login was rejected and
-   never ran; any administrator bootstrap must be narrowly reviewed and temporary.
+   never ran. A narrower one-site/one-app setup was also rejected by automatic
+   approval review. Explicit approval is now pending for temporary delegated
+   `Sites.FullControl.All`, the production app's PCM-only write grant, and removal
+   of the temporary setup client afterward. No temporary administrator flow ran.
 3. Deploy `api/` to Azure Functions with Node 22 or newer, HTTPS, the employee
    site's exact CORS origin, and a US region. Keep request bodies, tokens and
    patient records out of diagnostic logs.
@@ -55,8 +58,8 @@ The existing owner console continues to use its local SQLite workflow.
 8. Set `pcm_cloud_config` in the owner's private console config, restart the console,
    and verify edits in both directions using synthetic records. Schedule the
    publisher after validated nightly publication; never fork the report scrape.
-9. Resolve the Pages HTTPS certificate. DNS points to Pages, but certificate
-   issuance and enforcement are not yet verified.
+9. Pages HTTPS is verified: restarting provisioning issued the certificate,
+   enforcement is enabled, and an actual HTTPS request returned 200 successfully.
 10. Set `config.apiBase`, promote `workspace.html` to `index.html`, rebuild,
     test real sign-in for the owner and one explicitly approved employee, then
     merge the website release. Keep the setup landing page until these checks pass.
@@ -71,4 +74,5 @@ Microsoft API tokens, denial without PCM permission, forged tokens, stale edits,
 activity retries, financial field removal, and retained members. The browser
 test intercepts authentication requests and sends no emails. Separate console
 tests cover its cloud adapter and existing workflow. Live employee access has
-not been verified yet.
+not been verified yet. The implementation is backed up on `shared-pcm-accounts`
+with a draft pull request; main remains the setup landing page.
