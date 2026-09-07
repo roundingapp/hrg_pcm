@@ -86,3 +86,17 @@ This Mac's default route to some Google frontends timed out during verification.
 Tests used a working official Google frontend with unchanged TLS hostname
 verification. The public site's endpoint configuration remains Google's standard
 service hostnames. No Microsoft browser session credentials were copied.
+
+## Initial-load recovery fix
+
+The persistent loading placeholder was reproduced with a failed request in both
+Chrome and WebKit. The client now uses Firestore Lite's online-only RPC reads,
+awaits the initial worklist load, and provides a compact status or Retry button.
+Reads stop waiting after 20 seconds. Late failed requests cannot overwrite newer
+results. Failed loads no longer leave the summary stuck on Loading program.
+
+Regression checks cover rejected and stalled reads, successful retry, late
+responses and initial-load completion in Chrome and WebKit. WebKit loaded the
+real 1,075-patient worklist in 1.3 seconds, refreshed and signed out successfully.
+Its new Firestore transport also passed synthetic atomic-write, server-timestamp
+and mandatory-audit checks. The isolated test documents were removed.

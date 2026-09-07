@@ -3,3 +3,5 @@
 .console-link{color:var(--sub);font-size:12px;text-decoration:none;padding:8px}.console-link:hover{color:var(--brand)}
 .pcm-workspace main{max-width:1540px}.pcm-workspace .page-heading{align-items:flex-end}.pcm-workspace .freshness{white-space:nowrap}
 @media(max-width:760px){.pcm-header{padding:14px 17px;position:sticky;top:0;z-index:30}.pcm-header .brand{margin:0}.pcm-workspace .freshness{display:block;margin-top:16px}.pcm-workspace input,.pcm-workspace select,.pcm-workspace textarea{font-size:16px}.pcm-workspace .top-actions{width:auto}.pcm-workspace footer span{display:block}}
+
+.pcm-load-status{grid-column:1/-1;padding:18px 20px;color:var(--sub);font-size:14px;line-height:1.5}.pcm-load-error{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}.pcm-load-error strong{color:var(--ink)}.pcm-load-error span{flex:1 1 240px}.pcm-load-error button{flex:0 0 auto}
