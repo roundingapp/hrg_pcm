@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://login.microsoftonline.com https://*.msauth.net https://identitytoolkit.googleapis.com https://securetoken.googleapis.com ; frame-src 'self' https://login.microsoftonline.com https://hrg-pay-tracker.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'self'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5f2"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+<title>HRG PCM · Principal Care Management</title>
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link rel="stylesheet" href="shared/owner.css?v=02cb17d4f790"><link rel="stylesheet" href="shared/pcm.css?v=9912b4239437"><link rel="stylesheet" href="workspace.css?v=b4f5e7f79efa">
+<script type="module" src="app.js?v=5d0a939ba00e"></script></head>
+<body class="pcm-workspace">
+<header class="pcm-header"><a class="brand" href="/" aria-label="HRG PCM home"><img src="assets/emblem.svg" alt="" width="44" height="44"><span>HRG <span>PCM</span></span></a>
+<div id="session-actions" class="top-actions" hidden><button id="sign-out">Sign out</button><button id="reload" aria-label="Refresh PCM">↻</button></div></header>
+<main>
+<section id="login" class="login-card card" aria-labelledby="login-title"><p class="eyebrow">PRINCIPAL CARE MANAGEMENT</p><h1 id="login-title">Welcome to PCM.</h1>
+<p>Use your HRG account, including the email and password you use for the pay tracker.</p>
+<form id="login-form"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="username" required>
+<label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required minlength="6">
+<button id="sign-in" class="primary" data-auth-control disabled>Sign in</button></form>
+<button id="forgot-password" class="text-button" data-auth-control disabled>Forgot password</button>
+<div class="login-divider">or</div><button id="microsoft-sign-in" data-auth-control disabled>Continue with Microsoft</button>
+<p class="new-account">New to HRG? Enter your preferred email and a password above.</p><button id="create-account" data-auth-control disabled>Create account</button>
+<p id="login-status" role="status">Preparing sign-in…</p><small>Patient access is enabled by your PCM administrator.</small></section>
+<section id="workspace" hidden><div class="page-heading"><div><p class="eyebrow">PRINCIPAL CARE MANAGEMENT</p><h1>Your PCM worklist.</h1></div><span id="asof" class="freshness"></span></div><div id="health" role="status"></div><div id="content"></div>
+<footer><span id="published"></span><span>Houston Renal Group</span></footer></section>
+</main><dialog id="detail" aria-labelledby="dialog-title"><div class="dialog-top"><h2 id="dialog-title">Patient workflow</h2><button id="close-dialog" aria-label="Close details">×</button></div><div id="dialog-content"></div></dialog><div id="toast" role="status" hidden></div>
+</body></html>

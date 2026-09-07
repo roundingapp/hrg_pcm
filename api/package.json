@@ -1,0 +1,1 @@
+{"name":"hrg-pcm-api","version":"0.1.0","private":true,"type":"module","main":"function-app.js","engines":{"node":">=22"},"dependencies":{"@azure/functions":"4.16.2","@azure/msal-node":"6.0.0","jose":"6.2.12"}}
