@@ -73,3 +73,16 @@ in Firebase before expiry.
 The existing Google project remains on its unbilled plan. Firestore's free quotas
 are shared with payroll; exceeding them can interrupt access. No paid plan was
 enabled during this deployment.
+
+## Release verification
+
+The Firestore release was merged through PR #1 and GitHub Pages serves the new
+HTTPS workspace. Microsoft sign-in completed with the owner's existing HRG
+session. Its Microsoft object ID was matched to the previously approved owner
+before enabling the corresponding Firebase UID. The owner's original pay
+identity remains enabled as well.
+
+This Mac's default route to some Google frontends timed out during verification.
+Tests used a working official Google frontend with unchanged TLS hostname
+verification. The public site's endpoint configuration remains Google's standard
+service hostnames. No Microsoft browser session credentials were copied.
