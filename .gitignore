@@ -2,3 +2,16 @@
 node_modules/
 test-results/
 *.log
+__pycache__/
+*.pyc
+.env
+.env.*
+local.settings.json
+*.pem
+*.key
+*.pfx
+*.sqlite
+.DS_Store
+node_modules/
+test-results/
+*.log

@@ -1,24 +1,18 @@
 # HRG PCM
 
-Employee PCM entry point, published from `main` through GitHub Pages,
-following the HRG pay site's setup.
+Employee PCM workspace on GitHub Pages. Staff can use their existing HRG pay
+tracker email/password or Microsoft sign-in. Separate PCM permissions control
+patient access; creating an account alone does not grant access.
 
-Employees can reuse their existing HRG pay tracker identity. Personal-email
-accounts and Microsoft sign-in are also planned. Authentication identifies
-the employee; separate PCM permissions control patient access. The shared
-Microsoft-hosted data connection is under construction, and the landing page
-states that setup is incomplete.
+The website and HRG owner console share the same PCM interface and Firestore
+workflow records. The existing validated console pipeline publishes the PCM
+candidate projection after its nightly refresh. NextGen analytics remains the
+source of truth for candidate evidence and billing status.
 
-PCM comes from the existing HRG console implementation. Its interface is shared
-between the employee website and owner console, with a common operational data
-store rather than independent enrollment or activity records. The owner's
-private hostname and IP address must never be committed here. Patient data is
-served only by an authenticated backend, never by GitHub Pages.
+Only application code and branding belong in this repository. Patient records,
+workflow notes, access rosters and credentials stay out of GitHub. The browser
+uses authenticated Firestore access with server-enforced rules and memory-only
+caching. There is no Azure hosting dependency.
 
-Only application code and static branding belong in this repository. Do not add
-patient exports, databases, workflow records, passwords, tokens, or console logs.
-Branding is copied from HRG's canonical branding directory.
-
-Configure the repository's Pages custom domain before creating its DNS record,
-then enforce HTTPS once GitHub has issued the certificate. Private infrastructure
-addresses must never appear in this repository or its published history.
+Run `npm ci`, `npm test`, and `npm run build`. Update the shared console interface
+with `node build.mjs --sync-console`. See `DEPLOYMENT.md` for deployment details.
