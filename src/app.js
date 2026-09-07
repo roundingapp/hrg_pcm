@@ -1,4 +1,4 @@
-import {createPCM} from '../shared/pcm.js';
+import {createPCM,waitForRead} from '../shared/pcm.js';
 import {createIdentity} from './auth.js';
 import {firestoreClient} from './firestore-client.js';
 import {createPCMStore} from './pcm-store.js';
@@ -15,10 +15,10 @@ async function api(path,options={}) {
 async function load(){
   if(loading)return;const ticket=epoch;loading=true;$('#reload').disabled=true;
   try{
-    const meta=await api('/api/pcm/meta');if(ticket!==epoch)return;status('');
+    const meta=await waitForRead(api('/api/pcm/meta'));if(ticket!==epoch)return;status('');
     $('#asof').textContent='Data through '+meta.asof;$('#published').textContent='Published '+new Date(meta.built).toLocaleString();
     $('#login').hidden=true;$('#workspace').hidden=false;$('#session-actions').hidden=false;
-    if(!pcm){pcm=createPCM({api,openDialog,dialogVersion:()=>dialogRequest,toast,showFinancials:false,isActive:()=>epoch===ticket&&!$('#workspace').hidden});$('#content').innerHTML=pcm.render();pcm.wire();}
+    if(!pcm){pcm=createPCM({api,openDialog,dialogVersion:()=>dialogRequest,toast,showFinancials:false,isActive:()=>epoch===ticket&&!$('#workspace').hidden});$('#content').innerHTML=pcm.render();await pcm.wire();}
     else await pcm.refresh();
   }catch(e){if(ticket===epoch){status(e.message);$('#session-actions').hidden=!identity?.user();}}
   finally{loading=false;$('#reload').disabled=false;}
